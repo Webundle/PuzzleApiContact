@@ -2,4 +2,7 @@ contact:
     type: rest
     resource: Puzzle\Api\ContactBundle\Controller\ContactController
 
+group:
+    type: rest
+    resource: Puzzle\Api\ContactBundle\Controller\GroupController
     
