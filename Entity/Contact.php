@@ -10,15 +10,17 @@ use Knp\DoctrineBehaviors\Model\Blameable\Blameable;
 use Knp\DoctrineBehaviors\Model\Timestampable\Timestampable;
 use Puzzle\OAuthServerBundle\Traits\PrimaryKeyable;
 use Puzzle\OAuthServerBundle\Traits\Pictureable;
+use Doctrine\Common\Collections\Collection;
+use Puzzle\Api\ContactBundle\Entity\Group;
 
 /**
- * Contact
+ * Group
  *
  * @ORM\Table(name="contact")
  * @ORM\Entity()
  * @ORM\HasLifecycleCallbacks()
  * @JMS\ExclusionPolicy("all")
- * @JMS\XmlRoot("contact")
+ * @JMS\XmlRoot("group")
  * @Hateoas\Relation(
  * 		name = "self", 
  * 		href = @Hateoas\Route(
@@ -94,7 +96,16 @@ class Contact
      */
     private $position;
     
-    public function setFirstName($firstName) : string {
+    /**
+     * @ORM\ManyToMany(targetEntity="Group", inversedBy="groups")
+     * @ORM\JoinTable(name="contact_groups",
+     *      joinColumns={@ORM\JoinColumn(name="contact_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id")}
+     * )
+     */
+    private $groups;
+    
+    public function setFirstName($firstName) : self {
         $this->firstName = $firstName;
         return $this;
     }
@@ -168,5 +179,33 @@ class Contact
     
     public function getFullName() :?string {
         return trim($this->firstName. ' '. $this->lastName);
+    }
+    
+    public function setGroups (Collection $groups) : self {
+        foreach ($groups as $group) {
+            $this->addGroup($group);
+        }
+        
+        return $this;
+    }
+    
+    public function addGroup(Group $group) :self {
+        if ($this->groups->count() === 0 || $this->groups->contains($group) === false) {
+            $this->groups->add($group);
+        }
+        
+        return $this;
+    }
+    
+    public function removeGroup(Group $group) :self {
+        if ($this->groups->contains($group) === true) {
+            $this->groups->removeElement($group);
+        }
+        
+        return $this;
+    }
+    
+    public function getGroups() :?Collection {
+        return $this->groups;
     }
 }

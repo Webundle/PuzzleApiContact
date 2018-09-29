@@ -46,10 +46,7 @@ use Puzzle\OAuthServerBundle\Traits\ExprTrait;
  * @Hateoas\Relation(
  * 		name = "contacts", 
  *      exclusion = @Hateoas\Exclusion(excludeIf = "expr(object.getContacts() === null)"),
- * 		href = @Hateoas\Route(
- * 			"get_contacts", 
- * 			parameters = {"id" = "=:~expr(object.stringify(',',object.getContacts()))"},
- * 			absolute = true,
+ *      embedded = "expr(object.getContacts())"
  * ))
  */
 class Group
@@ -60,14 +57,7 @@ class Group
 	    Blameable,
 	    Timestampable,
 	    ExprTrait;
-    /**
-     * @var array
-     * @ORM\Column(name="contacts", type="array", nullable=true)
-     * @JMS\Expose
-	 * @JMS\Type("array")
-     */
-    private $contacts;
-    
+   
     /**
      * @ORM\OneToMany(targetEntity="Group", mappedBy="parent", cascade={"remove"})
      */
@@ -79,34 +69,45 @@ class Group
      */
     private $parent;
     
+    /**
+     * @ORM\ManyToMany(targetEntity="Contact", mappedBy="groups")
+     */
+    private $contacts;
+    
     public function __construct() {
         $this->childs = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->contacts = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
-    public function setContacts($contacts) :self {
-    	foreach ($contacts as $contact){
-    	    $this->addContact($contact);
-    	}
-    	
-    	return $this;
+    public function setContacts (Collection $contacts) : self {
+        foreach ($contacts as $contact) {
+            $this->addContact($contact);
+        }
+        
+        return $this;
     }
     
-    public function addContact($contact) :self {
-    	$this->contacts[] = $contact;
-    	$this->contacts = array_unique($this->contacts);
-    	
-    	return $this;
+    public function addContact(Contact $contact) :self {
+        if ($this->contacts->count() === 0 || $this->contacts->contains($contact) === false) {
+            $this->contacts->add($contact);
+            $contact->addGroup($this);
+        }
+        
+        return $this;
     }
     
-    public function removeContact($contact) :self {
-    	$this->contacts = array_diff($this->contacts, [$contact]);
-    	return $this;
+    public function removeContact(Contact $contact) :self {
+        if ($this->contacts->contains($contact) === true) {
+            $this->contacts->removeElement($contact);
+        }
+        
+        return $this;
     }
     
-    public function getContacts() :?array {
+    public function getContacts() :?Collection {
         return $this->contacts;
     }
-
+    
     public function addChild(Group $child) :self {
         $this->childs[] = $child;
         return $this;

@@ -1,19 +1,4 @@
 services:
-    _defaults:
-        autowire: true
-        autoconfigure: true
-        public: false
-        
-    # Service
-    Puzzle\Api\ContactBundle\:
-        resource: '%kernel.project_dir%/vendor/webundle/puzzle-api-contact/*'
-        exclude: '%kernel.project_dir%/vendor/webundle/puzzle-api-contact/{Entity,Repository,Tests}'
-    
-    # Controller
-    Puzzle\Api\ContactBundle\Controller\:
-        resource: '%kernel.project_dir%/vendor/webundle/puzzle-api-contact/Controller'
-        public: true
-        tags: ['controller.service_arguments']
     
         
     
